@@ -1,0 +1,44 @@
+version: '3'
+services:
+  rabbitmq-svc:
+    image: rabbitmq:3-management
+    networks:
+      - restaurante-bridge
+  mysql:
+    image: "mysql:5.7"
+    environment:
+      - MYSQL_DATABASE=restauranteDb
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=user123
+      - MYSQL_ROOT_PASSWORD=user123
+    ports:
+      - 8000:3306
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+    networks:
+      - restaurante-bridge
+  restaurante:
+    build: ./RestauranteService
+    restart: on-failure
+    depends_on:
+      - rabbitmq-svc
+      - mysql
+    ports:
+      - 8081:80
+    networks:
+      - restaurante-bridge
+  item:
+    build: ./ItemService
+    restart: on-failure
+    depends_on:
+      - rabbitmq-svc
+      - mysql
+      - restaurante
+    ports:
+      - 8080:80
+    networks:
+      - restaurante-bridge
+
+networks:
+  restaurante-bridge:
+    driver: bridge
